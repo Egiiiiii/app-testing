@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/Egiiiiii/simple-app.git',
+                    url: 'https://github.com/Egiiiiii/app-testing.git',
                     credentialsId: 'c711c500-b09d-42eb-8004-29b46d4641a5'
             }
         }
