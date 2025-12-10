@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Egiiiiii/simple-app.git',
+                    credentialsId: 'c711c500-b09d-42eb-8004-29b46d4641a5'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                sh 'npx eslint . || true'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build || echo "No build script found"'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline SUCCESS ✅"
+        }
+        failure {
+            echo "Pipeline FAILED ❌"
+        }
+    }
+}
