@@ -7,7 +7,9 @@ app.use(express.json());
 
 // route GET
 app.get('/', (req, res) => {
-    res.send('Hello World! Node.js server is running.')
+    res.send('Hello World! Node.js server is running.');
+    res.send('Hello World! Node.js server is runningsss.');
+
 });
 
 // route POST contoh
