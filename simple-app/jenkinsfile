@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    tools {
+        // Ganti 'NodeJS_18' dengan nama yang Anda berikan di Global Tool Configuration
+        nodejs 'nodejs'
+    }
 
     stages {
         stage('Checkout') {
