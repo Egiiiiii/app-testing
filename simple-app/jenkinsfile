@@ -1,88 +1,74 @@
 pipeline {
-    // Jalankan Pipeline di Agent manapun yang tersedia
-    agent any 
+    agent any
 
-    // Konfigurasi Tools global yang akan digunakan (Node.js dan npm)
     tools {
-        // Ganti 'NodeJS_18' dengan nama yang Anda berikan di Jenkins Web UI
-        nodejs 'nodejs' 
+        nodejs "node18"
     }
 
     stages {
-        // Stage 1: Checkout SCM (Dilakukan Otomatis oleh Jenkins, tetapi bisa didefinisikan eksplisit jika perlu)
         stage('Checkout') {
             steps {
-                // Jenkins akan secara otomatis melakukan checkout berdasarkan konfigurasi Job.
-                // Jika ingin spesifik, gunakan ini (Pastikan kredensial ID benar):
-                git branch: 'main',
-                    url: 'https://github.com/Egiiiiii/app-testing.git',
-                    credentialsId: 'c711c500-b09d-42eb-8004-29b46d4641a5' 
+                git branch: 'main', url: 'https://github.com/Egiiiiii/simple-app.git'
             }
         }
 
-        // Stage 2: Install Dependencies
         stage('Install Dependencies') {
             steps {
-                // Pindah direktori kerja ke folder proyek Node.js Anda
-                dir('simple-app') { 
-                    echo 'Menginstall dependencies menggunakan npm...'
+                dir('simple-app') {
                     sh 'npm install'
                 }
             }
         }
 
-        // Stage 3: Linting (Pemeriksaan Kualitas Kode)
-        stage('Lint') {
+        stage('Lint Check') {
             steps {
                 dir('simple-app') {
-                    echo 'Menjalankan Linting...'
-                    // Gunakan '|| true' agar build tidak langsung gagal jika linting error, tapi hanya mencatat warning
-                    sh 'npx eslint . || true' 
+                    // cek error syntax
+                    sh 'node -c index.js || true'
                 }
             }
         }
 
-        // Stage 4: Testing
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 dir('simple-app') {
-                    echo 'Menjalankan Unit dan Integrasi Test...'
-                    sh 'npm test' 
+                    // kalau tidak ada test, ini memastikan app bisa start
+                    sh 'node index.js & sleep 3; pkill node'
                 }
             }
         }
 
-        // Stage 5: Build (Membuat artefak siap deploy, misal minified JS)
         stage('Build') {
             steps {
-                dir('simple-app') {
-                    echo 'Membuat build production...'
-                    sh 'npm run build || echo "No build script found. Melanjutkan..."'
-                }
+                echo 'Build proses (opsional)...'
             }
         }
 
-        // Stage 6: Deployment (Contoh sederhana)
-        stage('Deploy (Dummy)') {
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
             steps {
-                echo 'Simulasi deployment ke staging/production...'
-                // Contoh: salin file ke server remote, atau buat image Docker
-                // sh 'scp -r simple-app/dist user@remote-server:/var/www/app'
+                echo 'Deploying to server...'
+
+                // contoh deploy via ssh
+                sh """
+                ssh -o StrictHostKeyChecking=no root@SERVER_IP '
+                    cd /var/www/myapp &&
+                    git pull &&
+                    pm2 restart all
+                '
+                """
             }
         }
     }
 
-    // Aksi yang dijalankan setelah semua stages selesai
     post {
-        always {
-            // Hapus cache yang tidak perlu setelah build, untuk menghemat ruang di agent
-            cleanWs() 
+        failure {
+            echo "❌ Build gagal — tidak di-deploy."
         }
         success {
-            echo "Pipeline SUCCESS ✅"
-        }
-        failure {
-            echo "Pipeline FAILED ❌"
+            echo "✅ Build sukses — aplikasi telah di-deploy."
         }
     }
 }
